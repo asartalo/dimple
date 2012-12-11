@@ -1,0 +1,24 @@
+{
+    "name": "asar/dimple",
+    "description": "A Dependency Injection Container for PHP similar to Pimple but with scopes.",
+    "minimum-stability": "alpha",
+    "license": "MIT",
+    "require": {
+        "php": ">=5.3.0",
+        "pimple/pimple": "*.*"
+    },
+    "authors" : [
+        {
+            "name": "Wayne Duran",
+            "email": "asartalo@projectweb.ph",
+            "role": "Developer",
+            "homepage": "http://www.asartalo.org"
+        }
+    ],
+    "autoload": {
+        "psr-0": {
+            "Dimple\\Tests": "tests",
+            "Dimple": "src"
+        }
+    }
+}
