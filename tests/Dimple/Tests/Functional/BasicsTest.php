@@ -33,6 +33,13 @@ class BasicsTest extends TestCase
             $c['foo'] = function($c) {
                 return new \Dimple\Tests\Sample\Foo;
             };
+            
+            // Set scope for next definitions
+            $c->scope('parent');
+            
+            $c['bar'] = function($c) {
+                return new \Dimple\Tests\Sample\Bar($c['foo']);
+            };
         });
     }
     
@@ -93,5 +100,29 @@ class BasicsTest extends TestCase
     {
         $this->assertEquals('parent', $this->container->getParentScope('child'));
     }
+    
+    /**
+     * Instantiates object inside a scope
+     */
+    public function testInstantiatesObjectInsideScope()
+    {
+        $this->container->enterScope('parent');
+        $this->assertInstanceOf('Dimple\Tests\Sample\Bar', $this->container['bar']);
+    }
+    
+    /**
+     * Cannot instantiate objects from a different scope without entering the first
+     */
+    public function testInstantiatesObjectInDifferentScopeThrowsException()
+    {
+        $this->setExpectedException(
+            'Dimple\Exception\OutOfScope',
+            "The service 'bar' cannot be retrieved in current 'container' scope "
+            . "because it is in a lower scope 'parent'."
+        );
+        $this->container['bar'];
+    }
+    
+    
     
 }
