@@ -24,8 +24,9 @@ class ScopeTest extends TestCase
      */
     public function setUp()
     {
-        $this->parent = new Scope('parent');
-        $this->child = new Scope('child', $this->parent);
+        $this->container = $this->quickMock('Dimple\Container');
+        $this->parent = new Scope('parent', $this->container);
+        $this->child = new Scope('child', $this->container, $this->parent);
     }
 
     /**

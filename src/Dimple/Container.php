@@ -66,9 +66,9 @@ class Container implements \ArrayAccess
         }
 
         if ($this->hasScope($parentScope)) {
-            $this->scopes[$scope] = new Scope($scope, $this->scopes[$parentScope]);
+            $this->scopes[$scope] = new Scope($scope, $this, $this->scopes[$parentScope]);
         } else {
-            $this->scopes[$scope] = new Scope($scope);
+            $this->scopes[$scope] = new Scope($scope, $this);
         }
     }
 
@@ -147,12 +147,12 @@ class Container implements \ArrayAccess
     public function offsetSet($service, $value)
     {
         $container = $this->getCurrentDefinitionScopeContainer();
-        $container[$service] = $container->share($value);
+        $container->set($service, $value);
     }
 
     public function offsetExists($service)
     {
-        return $this->getCurrentScopeContainer()->offsetExists($service);
+        return $this->getCurrentScopeContainer()->has($service);
     }
 
     public function offsetUnset($service)
@@ -166,7 +166,7 @@ class Container implements \ArrayAccess
     public function offsetGet($service)
     {
         $container = $this->getCurrentScopeContainer();
-        while (!isset($container[$service])) {
+        while (!$container->has($service)) {
             $container = $container->getParent();
             if (!$container) {
                 throw new OutOfScope(
@@ -177,7 +177,7 @@ class Container implements \ArrayAccess
             }
         }
 
-        return $container[$service];
+        return $container->get($service);
     }
 
     /**

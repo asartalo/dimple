@@ -10,27 +10,32 @@
 
 namespace Dimple;
 
-use Pimple;
-
+use Closure;
 
 /**
  * A scope container
  */
-class Scope extends Pimple
+class Scope
 {
     private $name;
+    
+    private $container;
 
     private $parent;
+    
+    private $values = array();
 
     /**
      * Constructor
      *
-     * @param string $name   the name of the scope
-     * @param Scope  $parent the parent scope
+     * @param string    $name      the name of the scope
+     * @param Container $container the container
+     * @param Scope     $parent    the parent scope
      */
-    public function __construct($name, Scope $parent = null)
+    public function __construct($name, Container $container, Scope $parent = null)
     {
         $this->name = $name;
+        $this->container = $container;
         $this->parent = $parent;
     }
 
@@ -54,13 +59,27 @@ class Scope extends Pimple
         return $this->name;
     }
 
-    public function offsetGet($id)
+    public function get($id)
     {
-        if (!$this->offsetExists($id) && $this->getParent()) {
-            return $this->getParent()->offsetGet($id);
+        if (!$this->has($id) && $this->getParent()) {
+            return $this->getParent()->get($id);
+        }
+        
+        if ($this->values[$id] instanceof Closure) {
+            $this->values[$id] = $this->values[$id]($this->container);
         }
 
-        return parent::offsetGet($id);
+        return $this->values[$id];
+    }
+    
+    public function set($id, $value)
+    {
+        $this->values[$id] = $value;
+    }
+    
+    public function has($id)
+    {
+        return array_key_exists($id, $this->values);
     }
 
 }

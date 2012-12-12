@@ -4,8 +4,7 @@
     "minimum-stability": "alpha",
     "license": "MIT",
     "require": {
-        "php": ">=5.3.0",
-        "pimple/pimple": "*.*"
+        "php": ">=5.3.0"
     },
     "authors" : [
         {
