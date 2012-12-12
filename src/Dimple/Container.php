@@ -20,43 +20,42 @@ use Pimple;
 class Container implements \ArrayAccess
 {
     private $scopes = array();
-    
+
     private $defaultScope = 'container';
-    
+
     private $currentDefinitionScope;
-    
+
     private $currentScope;
 
     /**
      * Constructor
-     * 
+     *
      * @param callable $callable setup method
      */
     public function __construct($callable)
     {
         $this->createScope($this->defaultScope, null);
         $this->scope($this->defaultScope);
-        $this->container = new Pimple;
         $callable($this);
-        
+
         $this->enterScope($this->defaultScope);
     }
-    
+
     /**
      * Checks to see if a scope is defined
-     * 
+     *
      * @param string $scope the name of the scope
-     * 
+     *
      * @return boolean whether the scope is defined or not
      */
     public function hasScope($scope)
     {
         return array_key_exists($scope, $this->scopes);
     }
-    
+
     /**
      * Creates a scope
-     * 
+     *
      * @param string $scope       the name of the scope to be created
      * @param string $parentScope the name of the parent scope (default 'container')
      */
@@ -65,91 +64,133 @@ class Container implements \ArrayAccess
         if (empty($parentScope) && $parentScope === '') {
             $parentScope = $this->defaultScope;
         }
-        $this->scopes[$scope] = array($parentScope, array());
+
+        if ($this->hasScope($parentScope)) {
+            $this->scopes[$scope] = new Scope($scope, $this->scopes[$parentScope]);
+        } else {
+            $this->scopes[$scope] = new Scope($scope);
+        }
     }
-    
+
     /**
      * Returns the parent scope of the scope specified
-     * 
+     *
      * @param string $scope the name of the scope
      *
      * @return string the name of the parent scope
      */
     public function getParentScope($scope)
     {
-        return $this->hasScope($scope) ? $this->scopes[$scope][0] : '';
+        if ($this->hasScope($scope)) {
+            $scopeObject = $this->scopes[$scope];
+
+            return is_null($scopeObject->getParent()) ? null : $scopeObject->getParent()->getName();
+        }
     }
-    
+
     /**
      * Sets the current scope to be used for the next definitions
-     * 
+     *
      * @param string $scope the name of the scope
      */
     public function scope($scope)
     {
         $this->currentDefinitionScope = $scope;
     }
-    
+
     /**
      * Get current definition scope
-     * 
+     *
      * @return string returns the current definition scope
      */
     public function getCurrentDefinitionScope()
     {
         return $this->currentDefinitionScope;
     }
-    
+
     /**
      * Enters the scope for retrieval purpose only
-     * 
+     *
      * @param string $scope the name of the scope to enter to
      */
     public function enterScope($scope)
     {
         $this->currentScope = $scope;
     }
-    
+
     /**
      * Gets the current retrieval scope
-     * 
+     *
      * @return string the name of the current scope
      */
     public function getCurrentScope()
     {
         return $this->currentScope;
     }
-    
-    public function offsetSet($offset, $value)
+
+    private function getCurrentDefinitionScopeContainer()
     {
-        $this->scopes[$this->getCurrentDefinitionScope()][1][] = $offset;
-        $this->container[$offset] = $this->container->share($value);
+        return $this->scopes[$this->getCurrentDefinitionScope()];
     }
-    
-    public function offsetExists($offset)
+
+    private function getCurrentScopeContainer()
     {
-        return $this->container->offsetExists($offset);
+        return $this->scopes[$this->getCurrentScope()];
     }
-    
-    public function offsetUnset($offset)
+
+    /**
+     * Defines a service or parameter
+     *
+     * @param string $service the service name
+     * @param mixed  $value   a factory defined as a closure or a straight value
+     */
+    public function offsetSet($service, $value)
     {
-        $this->container->offsetUnset($offset);
+        $container = $this->getCurrentDefinitionScopeContainer();
+        $container[$service] = $container->share($value);
     }
-    
-    public function offsetGet($offset)
+
+    public function offsetExists($service)
     {
-        if (!$this->isInScope($offset)) {
-            throw new OutOfScope(
-                "The service '$offset' cannot be retrieved in current '{$this->getCurrentScope()}' scope "
-                . "because it is in a lower scope 'parent'."
-            );
+        return $this->getCurrentScopeContainer()->offsetExists($service);
+    }
+
+    public function offsetUnset($service)
+    {
+        $this->getCurrentScopeContainer()->offsetUnset($service);
+    }
+
+    /**
+     *
+     */
+    public function offsetGet($service)
+    {
+        $container = $this->getCurrentScopeContainer();
+        while (!isset($container[$service])) {
+            $container = $container->getParent();
+            if (!$container) {
+                throw new OutOfScope(
+                    "The service '$service' cannot be retrieved in current "
+                    . "'{$this->getCurrentScope()}' scope "
+                    . "because it is in a lower scope 'parent'."
+                );
+            }
         }
-        return $this->container[$offset];
+
+        return $container[$service];
     }
-    
+
+    /**
+     * See if the service or parameter is accessible within the current scope
+     *
+     * @param string $service the name of the service or the parameter
+     *
+     * @return boolean
+     */
     public function isInScope($service)
     {
         $currentScopeServices = $this->scopes[$this->getCurrentScope()][1];
+
         return in_array($service, $currentScopeServices);
     }
 

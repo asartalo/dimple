@@ -18,9 +18,11 @@ use Dimple\Container;
  */
 class BasicsTest extends TestCase
 {
-    
+
     /**
      * Setup
+     *
+     * @return void
      */
     public function setUp()
     {
@@ -28,21 +30,21 @@ class BasicsTest extends TestCase
             // Create scopes first
             $c->createScope('parent');
             $c->createScope('child', 'parent');
-            
+
             // Start definitions
             $c['foo'] = function($c) {
                 return new \Dimple\Tests\Sample\Foo;
             };
-            
+
             // Set scope for next definitions
             $c->scope('parent');
-            
-            $c['bar'] = function($c) {
-                return new \Dimple\Tests\Sample\Bar($c['foo']);
+
+            $c['bar'] = function($scope) {
+                return new \Dimple\Tests\Sample\Bar($scope['foo']);
             };
         });
     }
-    
+
     /**
      * Test basic instantiation
      */
@@ -50,7 +52,7 @@ class BasicsTest extends TestCase
     {
         $this->assertInstanceOf('Dimple\Tests\Sample\Foo', $this->container['foo']);
     }
-    
+
     /**
      * Container returns a single instance
      */
@@ -60,7 +62,7 @@ class BasicsTest extends TestCase
         $foo2 = $this->container['foo'];
         $this->assertSame($foo1, $foo2);
     }
-    
+
     /**
      * Container has default container scope
      */
@@ -68,7 +70,7 @@ class BasicsTest extends TestCase
     {
         $this->assertTrue($this->container->hasScope('container'));
     }
-    
+
     /**
      * Container can create scopes
      */
@@ -76,7 +78,7 @@ class BasicsTest extends TestCase
     {
         $this->assertTrue($this->container->hasScope('parent'));
     }
-    
+
     /**
      * Returns false when checking if a non-existent scope exists
      */
@@ -84,7 +86,7 @@ class BasicsTest extends TestCase
     {
         $this->assertFalse($this->container->hasScope('fooScope'));
     }
-    
+
     /**
      * New scopes' default parent scope is container
      */
@@ -92,7 +94,7 @@ class BasicsTest extends TestCase
     {
         $this->assertEquals('container', $this->container->getParentScope('parent'));
     }
-    
+
     /**
      * Can set parent scope
      */
@@ -100,7 +102,7 @@ class BasicsTest extends TestCase
     {
         $this->assertEquals('parent', $this->container->getParentScope('child'));
     }
-    
+
     /**
      * Instantiates object inside a scope
      */
@@ -109,7 +111,7 @@ class BasicsTest extends TestCase
         $this->container->enterScope('parent');
         $this->assertInstanceOf('Dimple\Tests\Sample\Bar', $this->container['bar']);
     }
-    
+
     /**
      * Cannot instantiate objects from a different scope without entering the first
      */
@@ -122,7 +124,7 @@ class BasicsTest extends TestCase
         );
         $this->container['bar'];
     }
-    
-    
-    
+
+
+
 }
