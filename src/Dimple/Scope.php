@@ -24,6 +24,8 @@ class Scope
     private $parent;
     
     private $values = array();
+    
+    private $cache = array();
 
     /**
      * Constructor
@@ -65,11 +67,15 @@ class Scope
             return $this->getParent()->get($id);
         }
         
-        if ($this->values[$id] instanceof Closure) {
-            $this->values[$id] = $this->values[$id]($this->container);
+        if (!array_key_exists($id, $this->cache)) {
+            if ($this->values[$id] instanceof Closure) {
+                $this->cache[$id] = $this->values[$id]($this->container);
+            } else {
+                $this->cache[$id] = &$this->values[$id];
+            }
         }
 
-        return $this->values[$id];
+        return $this->cache[$id];
     }
     
     public function set($id, $value)
@@ -80,6 +86,14 @@ class Scope
     public function has($id)
     {
         return array_key_exists($id, $this->values);
+    }
+    
+    /**
+     * Clears object cache
+     */
+    public function clear()
+    {
+        $this->cache = array();
     }
 
 }

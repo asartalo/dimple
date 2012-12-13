@@ -117,6 +117,16 @@ class Container implements \ArrayAccess
     {
         $this->currentScope = $scope;
     }
+    
+    /**
+     * Leave the scope
+     */
+    public function leaveScope()
+    {
+        $this->getCurrentScopeContainer()->clear();
+        $parentScope = $this->getCurrentScopeContainer()->getParent()->getName();
+        $this->currentScope = $parentScope;
+    }
 
     /**
      * Gets the current retrieval scope
@@ -171,8 +181,7 @@ class Container implements \ArrayAccess
             if (!$container) {
                 throw new OutOfScope(
                     "The service '$service' cannot be retrieved in current "
-                    . "'{$this->getCurrentScope()}' scope "
-                    . "because it is in a lower scope 'parent'."
+                    . "'{$this->getCurrentScope()}' scope."
                 );
             }
         }

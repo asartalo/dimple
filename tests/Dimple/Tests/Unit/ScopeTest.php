@@ -52,5 +52,40 @@ class ScopeTest extends TestCase
     {
         $this->assertEquals('parent', $this->parent->getName());
     }
+    
+    /**
+     * Retrieves a defined service
+     */
+    public function testRetrievesAService()
+    {
+        $this->parent->set('foo', function($c){
+            return new \Dimple\Tests\Sample\Foo;
+        });
+        $this->assertInstanceOf('Dimple\Tests\Sample\Foo', $this->parent->get('foo'));
+    }
+    
+    /**
+     * Retrieves same instance of service
+     */
+    public function testRetrievesSameInstanceOfService()
+    {
+        $this->parent->set('foo', function($c){
+            return new \Dimple\Tests\Sample\Foo;
+        });
+        $this->assertSame($this->parent->get('foo'), $this->parent->get('foo'));
+    }
+    
+    /**
+     * Clearing the cache will create new instances for objects
+     */
+    public function testCreatesNewInstancesWhenClearingCache()
+    {
+        $this->parent->set('foo', function($c){
+            return new \Dimple\Tests\Sample\Foo;
+        });
+        $foo1 = $this->parent->get('foo');
+        $this->parent->clear();
+        $this->assertNotSame($foo1, $this->parent->get('foo'));
+    }
 
 }

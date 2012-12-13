@@ -119,12 +119,43 @@ class BasicsTest extends TestCase
     {
         $this->setExpectedException(
             'Dimple\Exception\OutOfScope',
-            "The service 'bar' cannot be retrieved in current 'container' scope "
-            . "because it is in a lower scope 'parent'."
+            "The service 'bar' cannot be retrieved in current 'container' scope."
         );
         $this->container['bar'];
     }
 
+    /**
+     * Leaving a child scope returns to the parent scope
+     */
+    public function testLeavingChildScopeReturnsToParentScope()
+    {
+        $this->container->enterScope('parent');
+        $this->container->enterScope('child');
+        $this->container->leaveScope();
+        $this->assertEquals('parent', $this->container->getCurrentScope());
+    }
+    
+    /**
+     * Leaving a child scope clears cached objects for that scope
+     */
+    public function testLeavingScopeClearsCachedObjectsForThatScope()
+    {
+        $this->container->enterScope('parent');
+        $bar1 = $this->container['bar'];
+        $this->container->leaveScope();
+        $this->container->enterScope('parent');
+        $bar2 = $this->container['bar'];
+        $this->assertNotSame($bar1, $bar2);
+    }
 
-
+    /**
+     * Consecutive retrieval of service on same scope returns same object
+     */
+    public function testGettingSameServiceOnSameScopeReturnsSameObject()
+    {
+        $this->container->enterScope('parent');
+        $bar1 = $this->container['bar'];
+        $bar2 = $this->container['bar'];
+        $this->assertSame($bar1, $bar2);
+    }
 }
