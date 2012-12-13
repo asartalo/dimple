@@ -1,5 +1,5 @@
 {
-    "name": "asar/dimple",
+    "name": "asartalo/dimple",
     "description": "A Dependency Injection Container for PHP similar to Pimple but with scopes.",
     "minimum-stability": "alpha",
     "license": "MIT",
