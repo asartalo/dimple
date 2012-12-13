@@ -52,6 +52,14 @@ class BasicsTest extends TestCase
     {
         $this->assertInstanceOf('Dimple\Tests\Sample\Foo', $this->container['foo']);
     }
+    
+    /**
+     * Get method alias
+     */
+    public function testGetMethodAlias()
+    {
+        $this->assertInstanceOf('Dimple\Tests\Sample\Foo', $this->container->get('foo'));
+    }
 
     /**
      * Container returns a single instance

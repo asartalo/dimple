@@ -171,9 +171,13 @@ class Container implements \ArrayAccess
     }
 
     /**
-     *
+     * Retrieves a service or parameter
+     * 
+     * @param string $service the name of the service
+     * 
+     * @return mixed the service or parameter to be retrieved
      */
-    public function offsetGet($service)
+    public function get($service)
     {
         $container = $this->getCurrentScopeContainer();
         while (!$container->has($service)) {
@@ -187,6 +191,14 @@ class Container implements \ArrayAccess
         }
 
         return $container->get($service);
+    }
+    
+    /**
+     * ArrayAccess implementation
+     */
+    public function offsetGet($service)
+    {
+        return $this->get($service);
     }
 
     /**
