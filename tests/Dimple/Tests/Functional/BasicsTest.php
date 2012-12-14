@@ -42,9 +42,9 @@ class BasicsTest extends TestCase
             $c['bar'] = function($c) {
                 return new \Dimple\Tests\Sample\Bar($c['foo']);
             };
-            
+
             $c->scope('child');
-            
+
             $c['baz'] = function($c) {
                 return new \Dimple\Tests\Sample\Baz($c['bar']);
             };
@@ -58,7 +58,7 @@ class BasicsTest extends TestCase
     {
         $this->assertInstanceOf('Dimple\Tests\Sample\Foo', $this->container['foo']);
     }
-    
+
     /**
      * Get method alias
      */
@@ -148,7 +148,7 @@ class BasicsTest extends TestCase
         $this->container->leaveScope();
         $this->assertEquals('parent', $this->container->getCurrentScope());
     }
-    
+
     /**
      * Can enter an ancestor scope directly
      */
@@ -157,7 +157,7 @@ class BasicsTest extends TestCase
         $this->container->enterScope('child');
         $this->assertInstanceOf('Dimple\Tests\Sample\Baz', $this->container['baz']);
     }
-    
+
     /**
      * Leaving a child scope clears cached objects for that scope
      */
@@ -180,5 +180,30 @@ class BasicsTest extends TestCase
         $bar1 = $this->container['bar'];
         $bar2 = $this->container['bar'];
         $this->assertSame($bar1, $bar2);
+    }
+
+    /**
+     * Container can be extended
+     *
+     * @return void;
+     */
+    public function testContainerCanBeExtended()
+    {
+        $this->container->extend(function($c){
+            $c->createScope('alphaScope', 'parent');
+
+            $c->scope('alphaScope');
+
+            $c['alpha'] = function($c) {
+                $obj = new \stdClass;
+                $obj->foo = $c['foo'];
+
+                return $obj;
+            };
+        });
+
+        $this->container->enterScope('alphaScope');
+        $obj = $this->container['alpha'];
+        $this->assertInstanceOf('Dimple\Tests\Sample\Foo', $obj->foo);
     }
 }

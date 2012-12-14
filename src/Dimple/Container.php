@@ -36,9 +36,18 @@ class Container implements \ArrayAccess
     {
         $this->createScope($this->defaultScope, null);
         $this->scope($this->defaultScope);
-        $callable($this);
-
+        $this->extend($callable);
         $this->enterScope($this->defaultScope);
+    }
+
+    /**
+     * Extends the service definitions
+     *
+     * @param callable $callable setup method
+     */
+    public function extend($callable)
+    {
+        $callable($this);
     }
 
     /**
@@ -117,7 +126,7 @@ class Container implements \ArrayAccess
     {
         $this->currentScope = $scope;
     }
-    
+
     /**
      * Leave the scope
      */
@@ -172,9 +181,9 @@ class Container implements \ArrayAccess
 
     /**
      * Retrieves a service or parameter
-     * 
+     *
      * @param string $service the name of the service
-     * 
+     *
      * @return mixed the service or parameter to be retrieved
      */
     public function get($service)
@@ -192,7 +201,7 @@ class Container implements \ArrayAccess
 
         return $container->get($service);
     }
-    
+
     /**
      * ArrayAccess implementation
      */
