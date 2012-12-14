@@ -39,8 +39,14 @@ class BasicsTest extends TestCase
             // Set scope for next definitions
             $c->scope('parent');
 
-            $c['bar'] = function($scope) {
-                return new \Dimple\Tests\Sample\Bar($scope['foo']);
+            $c['bar'] = function($c) {
+                return new \Dimple\Tests\Sample\Bar($c['foo']);
+            };
+            
+            $c->scope('child');
+            
+            $c['baz'] = function($c) {
+                return new \Dimple\Tests\Sample\Baz($c['bar']);
             };
         });
     }
@@ -141,6 +147,15 @@ class BasicsTest extends TestCase
         $this->container->enterScope('child');
         $this->container->leaveScope();
         $this->assertEquals('parent', $this->container->getCurrentScope());
+    }
+    
+    /**
+     * Can enter an ancestor scope directly
+     */
+    public function testEnteringAnAncestorScopeDirectly()
+    {
+        $this->container->enterScope('child');
+        $this->assertInstanceOf('Dimple\Tests\Sample\Baz', $this->container['baz']);
     }
     
     /**
