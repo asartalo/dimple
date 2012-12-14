@@ -30,23 +30,31 @@ class Container implements \ArrayAccess
     /**
      * Constructor
      *
-     * @param callable $callable setup method
+     * @param mixed $services setup method
      */
-    public function __construct($callable)
+    public function __construct($services)
     {
         $this->createScope($this->defaultScope, null);
         $this->scope($this->defaultScope);
-        $this->extend($callable);
+        $this->extend($services);
         $this->enterScope($this->defaultScope);
     }
 
     /**
      * Extends the service definitions
      *
-     * @param callable $callable setup method
+     * @param mixed $services setup method
      */
-    public function extend($callable)
+    public function extend($services)
     {
+        if (!$services instanceof \Closure && file_exists($services)) {
+            $callable = function($container) use ($services) {
+                include $services;
+            };
+        } else {
+            $callable = $services;
+        }
+
         $callable($this);
     }
 

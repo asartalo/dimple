@@ -206,4 +206,15 @@ class BasicsTest extends TestCase
         $obj = $this->container['alpha'];
         $this->assertInstanceOf('Dimple\Tests\Sample\Foo', $obj->foo);
     }
+
+    /**
+     * Can take services from a php file
+     */
+    public function testCanGetServicesDefinitionFromPhpFile()
+    {
+        $file = realpath(__DIR__ . '/..') . DIRECTORY_SEPARATOR
+            . 'Sample' . DIRECTORY_SEPARATOR . 'services.php';
+        $container = new Container($file);
+        $this->assertInstanceOf('Dimple\Tests\Sample\Foo', $container['foo']);
+    }
 }
