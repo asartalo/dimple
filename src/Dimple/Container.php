@@ -11,7 +11,8 @@
 namespace Dimple;
 
 use Dimple\Exception\OutOfScope;
-use Pimple;
+use ReflectionClass;
+use Anodoc;
 
 
 /**
@@ -26,6 +27,8 @@ class Container implements \ArrayAccess
     private $currentDefinitionScope;
 
     private $currentScope;
+
+    private $docParser;
 
     /**
      * Constructor
@@ -177,15 +180,79 @@ class Container implements \ArrayAccess
         $container->set($service, $value);
     }
 
+    /**
+     * Check if a service exists through array access
+     *
+     * @param string $service the service name
+     *
+     * @return boolean wether the service exists
+     */
     public function offsetExists($service)
     {
         return $this->getCurrentScopeContainer()->has($service);
     }
 
+    /**
+     * Removes a service through array access
+     *
+     * @param string $service the service name
+     */
     public function offsetUnset($service)
     {
         $this->getCurrentScopeContainer()->offsetUnset($service);
     }
+
+    /**
+     * Automatically defines a service using doc comments
+     *
+     * @param string $className
+     *
+     * @return Closure
+     */
+    public function auto($className)
+    {
+        $reflector = new ReflectionClass($className);
+        $dependencies = $this->getDependencies($className);
+
+        return function($container) use ($reflector, $dependencies) {
+            return $reflector->newInstanceArgs(
+                $container->getInstances($container, $dependencies)
+            );
+        };
+    }
+
+    private function getDependencies($className)
+    {
+        $constructorDoc = $this->getDocParser()
+                               ->getDoc($className)
+                               ->getMethodDoc('__construct');
+        $injects = $constructorDoc->getTags('inject');
+        $dependencies = array();
+        foreach ($injects as $depedency) {
+            $dependencies[] = $depedency->getValue();
+        }
+
+        return $dependencies;
+    }
+
+    /**
+     * Loads an array of dependencies
+     *
+     * @param mixed $container    a container object
+     * @param mixed $dependencies a collection of dependencies
+     *
+     * @return array array as dependencies
+     */
+    public function getInstances($container, $dependencies)
+    {
+        $instances = array();
+        foreach ($dependencies as $serviceName) {
+            $instances[] = $container[$serviceName];
+        }
+
+        return $instances;
+    }
+
 
     /**
      * Retrieves a service or parameter
@@ -211,7 +278,11 @@ class Container implements \ArrayAccess
     }
 
     /**
-     * ArrayAccess implementation
+     * Retrieves a service or parameter using array access
+     *
+     * @param string $service the name of the service or parameter
+     *
+     * @return mixed the service or parameter to be retrieved
      */
     public function offsetGet($service)
     {
@@ -230,6 +301,15 @@ class Container implements \ArrayAccess
         $currentScopeServices = $this->scopes[$this->getCurrentScope()][1];
 
         return in_array($service, $currentScopeServices);
+    }
+
+    private function getDocParser()
+    {
+        if (!$this->docParser) {
+            $this->docParser = Anodoc::getNew();
+        }
+
+        return $this->docParser;
     }
 
 

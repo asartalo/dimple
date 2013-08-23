@@ -217,4 +217,33 @@ class BasicsTest extends TestCase
         $container = new Container($file);
         $this->assertInstanceOf('Dimple\Tests\Sample\Foo', $container['foo']);
     }
+
+    /**
+     * Can set services automatically
+     */
+    public function testAutomaticServiceSetting()
+    {
+        $this->container->extend(function($c) {
+            $c['foo'] = $c->auto('Dimple\Tests\Sample\Foo');
+        });
+
+        $this->assertInstanceOf('Dimple\Tests\Sample\Foo', $this->container['foo']);
+    }
+
+    /**
+     * Can inject services through comments
+     */
+    public function testAutomaticServiceInjectionThroughCommentDoc()
+    {
+        $this->container->extend(function($c) {
+            $c->createScope('grandchild', 'child');
+            $c->scope('grandchild');
+
+            $c['injection'] = $c->auto('Dimple\Tests\Sample\Injection');
+        });
+
+        $this->container->enterScope('grandchild');
+        $obj = $this->container['injection'];
+        $this->assertInstanceOf('Dimple\Tests\Sample\Bar', $obj->getInjected());
+    }
 }
