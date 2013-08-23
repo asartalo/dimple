@@ -30,7 +30,7 @@ class Container implements \ArrayAccess
     /**
      * Constructor
      *
-     * @param mixed $services setup method
+     * @param mixed $services container setup service definitions
      */
     public function __construct($services)
     {
@@ -43,7 +43,7 @@ class Container implements \ArrayAccess
     /**
      * Extends the service definitions
      *
-     * @param mixed $services setup method
+     * @param mixed $services container setup service definitions
      */
     public function extend($services)
     {
