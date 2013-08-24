@@ -205,26 +205,35 @@ class Container implements \ArrayAccess
     /**
      * Automatically defines a service using doc comments
      *
-     * @param string $className
+     * @param string $name either a class name or a reference to a service that
+     *                     obtains a class name
+     *
+     * @todo See if this should be cached
      *
      * @return Closure
      */
-    public function auto($className)
+    public function auto($name)
     {
-        $reflector = new ReflectionClass($className);
-        $dependencies = $this->getDependencies($className);
+        return function($container) use ($name) {
+            $name = $container->offsetExists($name) ? $this->get($name) : $name;
+            $reflector = $container->getReflection($name);
+            $dependencies = $container->getDependencies($name);
 
-        return function($container) use ($reflector, $dependencies) {
             return $reflector->newInstanceArgs(
                 $container->getInstances($container, $dependencies)
             );
         };
     }
 
-    private function getDependencies($className)
+    protected function getReflection($name)
+    {
+        return new ReflectionClass($name);
+    }
+
+    protected function getDependencies($name)
     {
         $constructorDoc = $this->getDocParser()
-                               ->getDoc($className)
+                               ->getDoc($name)
                                ->getMethodDoc('__construct');
         $injects = $constructorDoc->getTags('inject');
         $dependencies = array();

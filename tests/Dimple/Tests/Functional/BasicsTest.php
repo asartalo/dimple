@@ -237,8 +237,8 @@ class BasicsTest extends TestCase
     {
         $this->container->extend(function($c) {
             $c->createScope('grandchild', 'child');
-            $c->scope('grandchild');
 
+            $c->scope('grandchild');
             $c['injection'] = $c->auto('Dimple\Tests\Sample\Injection');
         });
 

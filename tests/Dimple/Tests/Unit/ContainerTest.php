@@ -27,26 +27,6 @@ class ContainerTest extends TestCase
     public function setUp()
     {
         $this->container = new Container(function($c) {
-            $c['foo'] = $c->auto('Dimple\Tests\Sample\Foo');
-        });
-    }
-
-    /**
-     * Can set services automatically
-     */
-    public function testAutomaticServiceSetting()
-    {
-        $this->assertInstanceOf('Dimple\Tests\Sample\Foo', $this->container['foo']);
-    }
-
-    /**
-     * Can inject services through doc comments
-     *
-     * @return void
-     */
-    public function testInjectingServicesThroughDocComments()
-    {
-        $container = new Container(function($c){
             // Create scopes first
             $c->createScope('parent');
             $c->createScope('child', 'parent');
@@ -61,9 +41,44 @@ class ContainerTest extends TestCase
             $c->scope('child');
             $c['injection'] = $c->auto('Dimple\Tests\Sample\Injection');
         });
+    }
 
-        $container->enterScope('child');
-        $obj = $container['injection'];
+    /**
+     * Can set services automatically
+     */
+    public function testAutomaticServiceSetting()
+    {
+        $this->assertInstanceOf('Dimple\Tests\Sample\Foo', $this->container['foo']);
+    }
+
+    /**
+     * Can inject services through doc comments
+     */
+    public function testInjectingServicesThroughDocComments()
+    {
+        $this->container->enterScope('child');
+        $obj = $this->container['injection'];
+        $this->assertInstanceOf('Dimple\Tests\Sample\Bar', $obj->getInjected());
+    }
+
+    /**
+     * Can auto-inject services lazily by passing a reference to auto
+     *
+     * @return void
+     */
+    public function testInjectAutomaticServiceWithLazyClassName()
+    {
+        $this->container->extend(function($c) {
+            $c['injection.class'] = function($c) {
+                return 'Dimple\Tests\Sample\Injection';
+            };
+
+            $c->scope('child');
+            $c['injection'] = $c->auto('injection.class');
+        });
+
+        $this->container->enterScope('child');
+        $obj = $this->container['injection'];
         $this->assertInstanceOf('Dimple\Tests\Sample\Bar', $obj->getInjected());
     }
 
