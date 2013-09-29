@@ -215,7 +215,7 @@ class Container implements \ArrayAccess
     public function auto($name)
     {
         return function($container) use ($name) {
-            $name = $container->offsetExists($name) ? $this->get($name) : $name;
+            $name = $container->offsetExists($name) ? $container->get($name) : $name;
             $reflector = $container->getReflection($name);
             $dependencies = $container->getDependencies($name);
 
