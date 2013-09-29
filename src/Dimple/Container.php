@@ -225,12 +225,26 @@ class Container implements \ArrayAccess
         };
     }
 
-    protected function getReflection($name)
+    /**
+     * Obtains the reflection of a class name
+     *
+     * @param string $name the class name
+     *
+     * @return ReflectionClass
+     */
+    public function getReflection($name)
     {
         return new ReflectionClass($name);
     }
 
-    protected function getDependencies($name)
+    /**
+     * Get the dependencies defined in the class
+     *
+     * @param string $name the class name
+     *
+     * @return array the dependencies
+     */
+    public function getDependencies($name)
     {
         $constructorDoc = $this->getDocParser()
                                ->getDoc($name)
